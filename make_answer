@@ -17,16 +17,27 @@
 import sys
 
 def permute(seq) :
-    "generator which yields successive permutations of the elements of seq."
-    if len(seq) == 0 :
-        yield ()
-    else :
-        for i in range(0, len(seq)) :
-            for rest in permute(seq[:i] + seq[i + 1:]) :
-                yield (seq[i],) + rest
+    "generator which yields successive distinctive permutations of the elements of seq." \
+    " Correctly skips duplicate permutations of duplicate elements."
+
+    def do_permute(seq) :
+        if len(seq) == 0 :
+            yield ()
+        else :
+            prev = None
+            for i in range(0, len(seq)) :
+                if seq[i] != prev :
+                    for rest in permute(seq[:i] + seq[i + 1:]) :
+                        yield (seq[i],) + rest
+                    #end for
+                #end if
+                prev = seq[i]
             #end for
-        #end for
-    #end if
+        #end if
+     #end do_permute
+
+#begin permute
+    return do_permute(sorted(seq))
 #end permute
 
 class Expr :
