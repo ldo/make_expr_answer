@@ -1,0 +1,126 @@
+#!/usr/bin/python3
+# -*- coding: utf-8
+#+
+# Given n positive integers, try to use any combination of integer addition, subtraction,
+# multiplication and division to try to come up with a specified result. Invoke this
+# script as follows:
+#
+#     make_answer n1 n2 n3 ... target
+#
+# where the arguments are sequence of positive integers, the last one being the target
+# value to achieve, and the others being the operands to use to produce that answer.
+# The output will be the possible solutions, one to a line.
+#
+# Written by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>.
+#-
+
+import sys
+
+def permute(seq) :
+    "generator which yields successive permutations of the elements of seq."
+    if len(seq) == 0 :
+        yield ()
+    else :
+        for i in range(0, len(seq)) :
+            for rest in permute(seq[:i] + seq[i + 1:]) :
+                yield (seq[i],) + rest
+            #end for
+        #end for
+    #end if
+#end permute
+
+class Expr :
+
+    def __init__(self, op, a, b) :
+        self.op = op
+        self.a = a
+        self.b = b
+    #end __init__
+
+    def eval(self) :
+        return self.op.func(self.a, self.b)
+    #end eval
+
+    def display(self) :
+        return "(" + self.a.display() + " " + self.op.display() + " " + self.b.display() + ")"
+    #end display
+
+#end Expr
+
+class Num :
+
+    def __init__(self, val) :
+        self.val = val
+    #end __init__
+
+    def eval(self) :
+        return self.val
+    #end eval
+
+    def display(self) :
+        return str(self.val)
+    #end display
+
+#end Num
+
+class Op :
+
+    def __init__(self, name, func) :
+        self.name = name
+        self.func = func
+    #end __init__
+
+    def construct(self, a, b) :
+        return Expr(self, a, b)
+    #end construct
+
+    def display(self) :
+        return self.name
+    #end display
+
+#end Op
+
+operators = \
+    (
+        Op("+", lambda a, b : a.eval() + b.eval()),
+        Op("-", lambda a, b : a.eval() - b.eval()),
+        Op("×", lambda a, b : a.eval() * b.eval()),
+        Op("÷", lambda a, b : a.eval() // b.eval()),
+    )
+
+def choose_ops(nr) :
+    if nr == 0 :
+        yield ()
+    else :
+        for rest in choose_ops(nr - 1) :
+            for op in operators :
+                yield (op,) + rest
+            #end for
+        #end for
+    #end if
+#end choose_ops
+
+#+
+# Mainline
+#-
+
+numbers = tuple(int(n) for n in sys.argv[1:])
+target = numbers[-1]
+numbers = numbers[:-1]
+
+nr_answers = 0
+for perm in permute(numbers) :
+    for op_choice in choose_ops(len(numbers) - 1) :
+        expr = Num(perm[0])
+        for i in range(1, len(perm)) :
+            expr = op_choice[i - 1].construct(expr, Num(perm[i]))
+        #end for
+        if expr.eval() == target :
+            nr_answers += 1
+            sys.stdout.write("%d: %s = %d\n" % (nr_answers, expr.display(), target))
+        #end if
+    #end for
+#end for
+if nr_answers == 0 :
+    sys.stdout.write("No answers found\n")
+#end if
