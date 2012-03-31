@@ -41,6 +41,7 @@ def permute(seq) :
 #end permute
 
 class Expr :
+    "represents an expression."
 
     def __init__(self, op, a, b) :
         self.op = op
@@ -49,32 +50,40 @@ class Expr :
     #end __init__
 
     def eval(self) :
+        "returns the value of the expression as a tuple of 2 values, the second" \
+        " being an indication of validity."
         return self.op.func(self.a, self.b)
     #end eval
 
     def display(self) :
+        "returns a formatted represention of the expression."
         return "(" + self.a.display() + " " + self.op.display() + " " + self.b.display() + ")"
     #end display
 
 #end Expr
 
 class Num :
+    "represents a single number."
 
     def __init__(self, val) :
         self.val = val
     #end __init__
 
     def eval(self) :
-        return self.val
+        "returns the value of the number as a tuple of 2 values, the second" \
+        " being an indication of validity (always True)."
+        return self.val, True
     #end eval
 
     def display(self) :
+        "returns a formatted represention of the number."
         return str(self.val)
     #end display
 
 #end Num
 
 class Op :
+    "constructs an operator."
 
     def __init__(self, name, func) :
         self.name = name
@@ -82,24 +91,57 @@ class Op :
     #end __init__
 
     def construct(self, a, b) :
+        "constructs an expression using the operator and the specified operands."
         return Expr(self, a, b)
     #end construct
 
     def display(self) :
+        "returns a formatted represention of the operator applied to its operands."
         return self.name
     #end display
 
 #end Op
 
+def add(a, b) :
+    "addition operation, always valid if operands are valid."
+    a = a.eval()
+    b = b.eval()
+    return a[0] + b[0], a[1] and b[1]
+#end add
+
+def sub(a, b) :
+    "subtraction operation, valid if operands are valid and" \
+    " first operand is not less than second."
+    a = a.eval()
+    b = b.eval()
+    return a[0] - b[0], a[1] and b[1] and a[0] >= b[0]
+#end sub
+
+def mul(a, b) :
+    "addition operation, always valid if operands are valid."
+    a = a.eval()
+    b = b.eval()
+    return a[0] * b[0], a[1] and b[1]
+#end mul
+
+def intdiv(a, b) :
+    "division operation, valid if operands are valid and" \
+    " second operand is not zero and first operand is exactly divisible by second."
+    a = a.eval()
+    b = b.eval()
+    return a[0] // b[0] if b[0] != 0 else 0, a[1] and b[1] and b[0] != 0 and a[0] % b[0] == 0
+#end intdiv
+
 operators = \
-    (
-        Op("+", lambda a, b : a.eval() + b.eval()),
-        Op("-", lambda a, b : a.eval() - b.eval()),
-        Op("×", lambda a, b : a.eval() * b.eval()),
-        Op("÷", lambda a, b : a.eval() // b.eval()),
+    ( # list of all the valid operators
+        Op("+", add),
+        Op("-", sub),
+        Op("×", mul),
+        Op("÷", intdiv),
     )
 
 def choose_ops(nr) :
+    "generator which yields all combinations of the specified number of operators."
     if nr == 0 :
         yield ()
     else :
@@ -126,7 +168,8 @@ for perm in permute(numbers) :
         for i in range(1, len(perm)) :
             expr = op_choice[i - 1].construct(expr, Num(perm[i]))
         #end for
-        if expr.eval() == target :
+        val, ok = expr.eval()
+        if ok and val == target :
             nr_answers += 1
             sys.stdout.write("%d: %s = %d\n" % (nr_answers, expr.display(), target))
         #end if
