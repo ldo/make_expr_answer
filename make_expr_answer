@@ -2,19 +2,29 @@
 # -*- coding: utf-8
 #+
 # Given n positive integers, try to use any combination of integer addition, subtraction,
-# multiplication and division to try to come up with a specified result. Invoke this
-# script as follows:
+# multiplication and division to try to come up with a specified result. This script can
+# be invoked in two ways. Do it as follows:
 #
 #     make_answer solve n1 n2 n3 ... target
 #
 # where the arguments are sequence of positive integers, the last one being the target
 # value to achieve, and the others being the operands to use to produce that answer.
-# The output will be the possible solutions, one to a line.
+# The output will be the possible solutions, one to a line. Alternatively, invoke it like
+# this:
+#
+#     make_answer count n target
+#
+# and it will go through all possible combinations of n digits each in the range 1..9,
+# and count up the number of ways each such combination can yield the target value.
 #
 # Written by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>.
 #-
 
 import sys
+
+#+
+# Miscellaneous useful stuff
+#-
 
 def permute(seq) :
     "generator which yields successive distinctive permutations of the elements of seq." \
@@ -39,6 +49,30 @@ def permute(seq) :
 #begin permute
     return do_permute(sorted(seq))
 #end permute
+
+def digit_combinations(n) :
+    "generator which yields all possible combinations of n of the digits 1..9." \
+    " Correctly skips duplicate permutations of duplicate elements."
+
+    def do_combine(remaining, used) :
+        for i in range(max(used + (1,)), 10) :
+            if remaining > 1 :
+                for rest in do_combine(remaining - 1, used + (i,)) :
+                    yield rest
+                #end for
+            else :
+                yield used + (i,)
+            #end if
+        #end for
+    #end do_combine
+
+#begin digit_combinations
+    return do_combine(n, ())
+#end digit_combinations
+
+#+
+# Expression representation and evaluation
+#-
 
 class Expr :
     "represents an expression."
@@ -208,6 +242,29 @@ if fn == "solve" :
 
     solve(numbers, target, AnswerCollector.another_answer)
     AnswerCollector.no_more_answers()
+elif fn == "count" :
+    if len(sys.argv) != 4 :
+        raise RuntimeError("need exactly two more args, the number of single-digit numbers, and the target to achieve")
+    #end if
+    n, target = tuple(int(n) for n in sys.argv[2:])
+
+    class AnswerCounter :
+
+        def __init__(self) :
+            self.nr_answers = 0
+        #end __init__
+
+        def another_answer(self, answer) :
+            self.nr_answers += 1
+        #end another_answer
+
+    #end AnswerCounter
+
+    for c in digit_combinations(n) :
+        counter = AnswerCounter()
+        solve(c, target, counter.another_answer)
+        sys.stdout.write("%s => %d\n" % (repr(c), counter.nr_answers))
+    #end for
 else :
     raise RuntimeError("unrecognized function “%s%”" % fn)
 #end if
