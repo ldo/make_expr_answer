@@ -5,7 +5,7 @@
 # multiplication and division to try to come up with a specified result. Invoke this
 # script as follows:
 #
-#     make_answer n1 n2 n3 ... target
+#     make_answer solve n1 n2 n3 ... target
 #
 # where the arguments are sequence of positive integers, the last one being the target
 # value to achieve, and the others being the operands to use to produce that answer.
@@ -153,28 +153,61 @@ def choose_ops(nr) :
     #end if
 #end choose_ops
 
+def solve(numbers, target, answer) :
+    "numbers is a tuple of integers to try to arrange," \
+    " target is the target integer value to evaluate to," \
+    " and answer is the callback to invoke with each formatted" \
+    " answer line."
+    for perm in permute(numbers) :
+        for op_choice in choose_ops(len(numbers) - 1) :
+            expr = Num(perm[0])
+            for i in range(1, len(perm)) :
+                expr = op_choice[i - 1].construct(expr, Num(perm[i]))
+            #end for
+            val, ok = expr.eval()
+            if ok and val == target :
+                answer("%s = %d" % (expr.display(), target))
+            #end if
+        #end for
+    #end for
+#end solve
+
 #+
 # Mainline
 #-
 
-numbers = tuple(int(n) for n in sys.argv[1:])
-target = numbers[-1]
-numbers = numbers[:-1]
+if len(sys.argv) < 2 :
+    raise RuntimeError("need at least one arg, the function to perform")
+#end if
+fn = sys.argv[1]
+if fn == "solve" :
+    if len(sys.argv) < 5 :
+        raise RuntimeError("need at least three more args, the numbers to work with and the target to achieve")
+    #end if
+    numbers = tuple(int(n) for n in sys.argv[2:])
+    target = numbers[-1]
+    numbers = numbers[:-1]
 
-nr_answers = 0
-for perm in permute(numbers) :
-    for op_choice in choose_ops(len(numbers) - 1) :
-        expr = Num(perm[0])
-        for i in range(1, len(perm)) :
-            expr = op_choice[i - 1].construct(expr, Num(perm[i]))
-        #end for
-        val, ok = expr.eval()
-        if ok and val == target :
-            nr_answers += 1
-            sys.stdout.write("%d: %s = %d\n" % (nr_answers, expr.display(), target))
-        #end if
-    #end for
-#end for
-if nr_answers == 0 :
-    sys.stdout.write("No answers found\n")
+    class AnswerCollector :
+        nr_answers = 0
+
+        @classmethod
+        def another_answer(self, answer) :
+            self.nr_answers += 1
+            sys.stdout.write("%d: %s\n" % (self.nr_answers, answer))
+        #end another_answer
+
+        @classmethod
+        def no_more_answers(self) :
+            if self.nr_answers == 0 :
+                sys.stdout.write("No answers found\n")
+            #end if
+        #end no_more_answers
+
+    #end AnswerCollector
+
+    solve(numbers, target, AnswerCollector.another_answer)
+    AnswerCollector.no_more_answers()
+else :
+    raise RuntimeError("unrecognized function “%s%”" % fn)
 #end if
