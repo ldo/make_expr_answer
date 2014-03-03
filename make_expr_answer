@@ -192,12 +192,30 @@ def solve(numbers, target, answer) :
     " target is the target integer value to evaluate to," \
     " and answer is the callback to invoke with each formatted" \
     " answer line."
+
+    def iter_subexpr(numbers) :
+        "iterates over all possible expressions that can be constructed from" \
+        " the specified tuple of numbers in the specified order."
+        if len(numbers) > 0 :
+            if len(numbers) > 1 :
+                for splitpoint in range(1, len(numbers)) :
+                    for op in operators :
+                        for operand1 in iter_subexpr(numbers[:splitpoint]) :
+                            for operand2 in iter_subexpr(numbers[splitpoint:]) :
+                                yield op.construct(operand1, operand2)
+                            #end for
+                        #end for
+                    #end for
+                #end for
+            else :
+                yield Num(numbers[0])
+            #end if
+        #end if
+    #end iter_subexpr
+
+#begin solve
     for perm in permute(numbers) :
-        for op_choice in choose_ops(len(numbers) - 1) :
-            expr = Num(perm[0])
-            for i in range(1, len(perm)) :
-                expr = op_choice[i - 1].construct(expr, Num(perm[i]))
-            #end for
+        for expr in iter_subexpr(perm) :
             val, ok = expr.eval()
             if ok and val == target :
                 answer("%s = %d" % (expr.display(), target))
