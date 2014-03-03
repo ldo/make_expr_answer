@@ -4,14 +4,14 @@
 # multiplication and division to try to come up with a specified result. This script can
 # be invoked in two ways. Do it as follows:
 #
-#     make_answer solve n1 n2 n3 ... target
+#     make_expr_answer solve n1 n2 n3 ... target
 #
 # where the arguments are sequence of positive integers, the last one being the target
 # value to achieve, and the others being the operands to use to produce that answer.
 # The output will be the possible solutions, one to a line. Alternatively, invoke it like
 # this:
 #
-#     make_answer count n target
+#     make_expr_answer count n target
 #
 # and it will go through all possible combinations of n digits each in the range 1..9,
 # and count up the number of ways each such combination can yield the target value.
