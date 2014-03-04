@@ -76,21 +76,30 @@ def digit_combinations(n) :
 class Expr :
     "represents an expression."
 
-    def __init__(self, op, a, b) :
+    def __init__(self, op, opnds) :
         self.op = op
-        self.a = a
-        self.b = b
+        if len(opnds) < 2 :
+            raise RuntimeError("need at least 2 operands")
+        #end if
+        self.opnds = tuple(opnds)
     #end __init__
 
     def eval(self) :
         "returns the value of the expression as a tuple of 2 values, the second" \
         " being an indication of validity."
-        return self.op.func(self.a, self.b)
+        result = self.op.func(self.opnds[0], self.opnds[1])
+        i = 2
+        while result[1] and i < len(self.opnds) :
+            result = self.op.func(Num(result[0]), self.opnds[i])
+            i += 1
+        #end while
+        return result
     #end eval
 
     def display(self) :
         "returns a formatted represention of the expression."
-        return "(" + self.a.display() + " " + self.op.display() + " " + self.b.display() + ")"
+        return \
+            "(" + (" %s " % self.op.display()).join(x.display() for x in self.opnds) + ")"
     #end display
 
 #end Expr
@@ -118,14 +127,50 @@ class Num :
 class Op :
     "constructs an operator."
 
-    def __init__(self, name, func) :
+    def __init__(self, name, func, groupable) :
+        "“groupable” indicates that this operator is both commutative and associative."
         self.name = name
         self.func = func
+        self.groupable = groupable
     #end __init__
 
     def construct(self, a, b) :
         "constructs an expression using the operator and the specified operands."
-        return Expr(self, a, b)
+
+        def flatten(subexpr) :
+            "if subexpr has the same operator as myself and I am groupable, returns a list of" \
+            " its (recursively) extracted operands, so I can group them into single operator" \
+            " instance."
+            if self.groupable and isinstance(subexpr, Expr) and subexpr.op.func == self.func :
+                result = []
+                for opnds in flatten(subexpr.opnds) :
+                    result.extend(opnds)
+                #end if
+            else :
+                result = [subexpr]
+            #end if
+            return result
+        #end flatten
+
+        def canonical(expr) :
+            "defines a canonical ordering for operands of a groupable operator."
+            if isinstance(expr, Expr) or isinstance(expr, Num) :
+                key, valid = expr.eval()
+                if not valid :
+                    key = 0
+                #end if
+            else :
+                raise RuntimeError("unexpected expr type %s" % repr(type(expr)))
+            #end if
+            return key
+        #end canonical
+
+    #begin construct
+        opnds = flatten(a) + flatten(b)
+        if self.groupable :
+            opnds = sorted(opnds, key = canonical)
+        #end if
+        return Expr(self, opnds)
     #end construct
 
     def display(self) :
@@ -167,10 +212,10 @@ def intdiv(a, b) :
 
 operators = \
     ( # list of all the valid operators
-        Op("+", add),
-        Op("-", sub),
-        Op("×", mul),
-        Op("÷", intdiv),
+        Op("+", add, True),
+        Op("-", sub, False),
+        Op("×", mul, True),
+        Op("÷", intdiv, False),
     )
 
 def choose_ops(nr) :
@@ -191,6 +236,18 @@ def solve(numbers, target, answer) :
     " target is the target integer value to evaluate to," \
     " and answer is the callback to invoke with each formatted" \
     " answer line."
+
+    def signature(expr) :
+        "computes a unique identifying signature for Expr so I can spot duplicates."
+        if isinstance(expr, Expr) :
+            result = (expr.op.name,) + tuple(signature(opnd) for opnd in expr.opnds)
+        elif isinstance(expr, Num) :
+            result = (expr.val,)
+        else :
+            raise RuntimeError("unexpected expr type %s" % repr(type(expr)))
+        #end if
+        return result
+    #end signature
 
     def iter_subexpr(numbers) :
         "iterates over all possible expressions that can be constructed from" \
@@ -213,11 +270,16 @@ def solve(numbers, target, answer) :
     #end iter_subexpr
 
 #begin solve
+    seen = set()
     for perm in permute(numbers) :
         for expr in iter_subexpr(perm) :
-            val, ok = expr.eval()
-            if ok and val == target :
-                answer("%s = %d" % (expr.display(), target))
+            sig = signature(expr)
+            if sig not in seen :
+                val, ok = expr.eval()
+                if ok and val == target :
+                    answer("%s = %d" % (expr.display(), target))
+                #end if
+                seen.add(sig)
             #end if
         #end for
     #end for
