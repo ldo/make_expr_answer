@@ -11,7 +11,7 @@
 # The output will be the possible solutions, one to a line. Alternatively, invoke it like
 # this:
 #
-#     make_expr_answer count n target
+#     make_expr_answer combinations n target
 #
 # and it will go through all possible combinations of n digits each in the range 1..9,
 # and count up the number of ways each such combination can yield the target value.
@@ -379,7 +379,7 @@ def cmd_solve(args, opts) :
     AnswerCollector.no_more_answers()
 #end cmd_solve
 
-def cmd_count(args, opts) :
+def cmd_combinations(args, opts) :
     n, target = tuple(int(n) for n in args)
 
     class AnswerCounter :
@@ -394,12 +394,13 @@ def cmd_count(args, opts) :
 
     #end AnswerCounter
 
+#begin cmd_combinations
     for c in digit_combinations(n) :
         counter = AnswerCounter()
         solve(c, target, counter.another_answer)
         sys.stdout.write("%s => %d\n" % (repr(c), counter.nr_answers))
     #end for
-#end cmd_count
+#end cmd_combinations
 
 recognized_commands = \
   {
@@ -431,11 +432,11 @@ recognized_commands = \
             "tries to find expressions using the num arguments that evaluate to total",
       },
 
-    "count" :
+    "combinations" :
       {
         "args" : 2,
         "opts" : (),
-        "action" : cmd_count,
+        "action" : cmd_combinations,
         "help_usage" : "nrnums target",
         "help_descr" :
             "tries to find expressions containing the specified number of numbers"
