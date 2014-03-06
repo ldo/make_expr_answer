@@ -163,6 +163,9 @@ class Op :
                 if not valid :
                     key = 0
                 #end if
+                if isinstance(expr, Expr) :
+                    key += 0.01 # sort literal numbers before expressions evaluating to those numbers
+                #end if
             else :
                 raise RuntimeError("unexpected expr type %s" % repr(type(expr)))
             #end if
