@@ -1,20 +1,19 @@
 #!/usr/bin/python3
 #+
-# Given n positive integers, try to use any combination of integer addition, subtraction,
-# multiplication and division to try to come up with a specified result. This script can
-# be invoked in two ways. Do it as follows:
+# This script studies solutions to the problem: given n positive integers, try to use any
+# combination of integer addition, subtraction, multiplication and division to try to come
+# up with a specified result. Besides simply listing solutions for specific cases, this
+# script can also report counts of solutions satisfying various criteria. Invoke this
+# script as follows:
 #
-#     make_expr_answer solve n1 n2 n3 ... target
+#     make_expr_answer cmd args...
 #
-# where the arguments are sequence of positive integers, the last one being the target
-# value to achieve, and the others being the operands to use to produce that answer.
-# The output will be the possible solutions, one to a line. Alternatively, invoke it like
-# this:
+# where cmd determines what function to perform, and the exact args depend on cmd.
+# Use the command
 #
-#     make_expr_answer combinations n target
+#     make_expr_answer help
 #
-# and it will go through all possible combinations of n digits each in the range 1..9,
-# and count up the number of ways each such combination can yield the target value.
+# to get a list of available commands.
 #
 # Written by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>.
 #-
@@ -525,7 +524,7 @@ recognized_commands = \
     "totals" :
       {
         "args" : (2, infinity),
-        "opts" : ("solutions=","totals="),
+        "opts" : ("solutions=", "totals="),
         "action" : cmd_totals,
         "help_usage" : "[--solutions=smin..smax] [--totals=tmin..tmax] num1 num2...",
         "help_descr" :
