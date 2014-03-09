@@ -601,10 +601,17 @@ def mainline() :
             or
                 len(args) > cmd_entry["args"][1]
         ) :
-            raise getopt.GetoptError \
-              (
-                "%s command needs %u..%u args" % ((cmd,) + cmd_entry["args"])
-              )
+            if cmd_entry["args"][1] < infinity :
+                raise getopt.GetoptError \
+                  (
+                    "%s command needs %u..%u args" % ((cmd,) + cmd_entry["args"])
+                  )
+            else :
+                raise getopt.GetoptError \
+                  (
+                    "%s command needs at least %u args" % ((cmd, cmd_entry["args"][0]))
+                  )
+            #end if
         #end if
     else :
         if len(args) != cmd_entry["args"] :
