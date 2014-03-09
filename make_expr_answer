@@ -525,7 +525,7 @@ recognized_commands = \
     "totals" :
       {
         "args" : (2, infinity),
-        "opts" : ("solutions=",),
+        "opts" : ("solutions=","totals="),
         "action" : cmd_totals,
         "help_usage" : "[--solutions=smin..smax] [--totals=tmin..tmax] num1 num2...",
         "help_descr" :
