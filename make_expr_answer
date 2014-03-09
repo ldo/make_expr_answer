@@ -444,8 +444,6 @@ def cmd_combinations(args, opts) :
     if arg != None :
         min_solutions, max_solutions = parse_range_arg(arg, min_solutions, max_solutions)
     #end if
-
-#begin cmd_combinations
     for c in number_combinations(n, lo, hi) :
         counter = AnswerCounter()
         solve(c, target, counter.another_answer)
