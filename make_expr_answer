@@ -311,6 +311,27 @@ def solve(numbers, target, answer) :
     #end for
 #end solve
 
+def largest_total(numbers) :
+    "returns the largest value that can come from an expression consisting of the" \
+    " tuple of specified numbers."
+    assert len(numbers) > 0, "no numbers!"
+    numbers = sorted(numbers)
+    result = 1
+    if len(numbers) > 1 and numbers[0] == 1 :
+        result = numbers[0] + numbers[1]
+        numbers = numbers[2:]
+        while len(numbers) > 0 and numbers[0] == 1 :
+            result += numbers[0]
+            numbers = numbers[1:]
+        #end while
+    #end if
+    for n in numbers :
+        result *= n
+    #end for
+    return \
+        result
+#end largest_total
+
 #+
 # Definitions of valid commands
 #
@@ -399,10 +420,22 @@ def cmd_solve(args, opts) :
     AnswerCollector.no_more_answers()
 #end cmd_solve
 
+class AnswerCounter :
+
+    def __init__(self) :
+        self.nr_answers = 0
+    #end __init__
+
+    def another_answer(self, answer) :
+        self.nr_answers += 1
+    #end another_answer
+
+#end AnswerCounter
+
 def cmd_combinations(args, opts) :
     n, target = tuple(int(n) for n in args)
-    arg = opts.get("range")
     lo, hi = 1, 9
+    arg = opts.get("range")
     if arg != None :
         lo, hi = parse_range_arg(arg, lo, hi)
     #end if
@@ -413,18 +446,6 @@ def cmd_combinations(args, opts) :
         min_solutions, max_solutions = parse_range_arg(arg, min_solutions, max_solutions)
     #end if
 
-    class AnswerCounter :
-
-        def __init__(self) :
-            self.nr_answers = 0
-        #end __init__
-
-        def another_answer(self, answer) :
-            self.nr_answers += 1
-        #end another_answer
-
-    #end AnswerCounter
-
 #begin cmd_combinations
     for c in number_combinations(n, lo, hi) :
         counter = AnswerCounter()
@@ -434,6 +455,30 @@ def cmd_combinations(args, opts) :
         #end if
     #end for
 #end cmd_combinations
+
+def cmd_totals(args, opts) :
+    numbers = tuple(int(n) for n in args)
+    lo = 1
+    hi = largest_total(numbers)
+    arg = opts.get("range")
+    if arg != None :
+        lo, hi = parse_range_arg(arg, lo, hi)
+    #end if
+    min_solutions = 0
+    max_solutions = infinity
+    arg = opts.get("solutions")
+    if arg != None :
+        min_solutions, max_solutions = parse_range_arg(arg, min_solutions, max_solutions)
+    #end if
+
+    for target in range(lo, hi + 1) :
+        counter = AnswerCounter()
+        solve(numbers, target, counter.another_answer)
+        if counter.nr_answers >= min_solutions and counter.nr_answers <= max_solutions :
+            sys.stdout.write("%d => %d\n" % (target, counter.nr_answers))
+        #end if
+    #end for
+#end cmd_totals
 
 recognized_commands = \
   {
@@ -475,6 +520,18 @@ recognized_commands = \
             "returns counts of expressions containing the specified number of numbers"
             " from the specified range (default 1..9) evaluating to the specified target."
             " Only reports a count of solutions if it is within [min, max] (default 0..∞)",
+      },
+
+    "totals" :
+      {
+        "args" : (2, infinity),
+        "opts" : ("solutions=",),
+        "action" : cmd_totals,
+        "help_usage" : "[--solutions=smin..smax] [--totals=tmin..tmax] num1 num2...",
+        "help_descr" :
+            "returns counts of expressions made up of the specified numbers that"
+            " evaluate to each possible total in the specified range."
+            " Only reports a count of solutions if it is within [smin, smax] (default 0..∞)",
       },
 
   } # recognized_commands
