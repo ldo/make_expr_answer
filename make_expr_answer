@@ -53,12 +53,12 @@ def permute(seq) :
     return do_permute(sorted(seq))
 #end permute
 
-def digit_combinations(n) :
-    "generator which yields all possible combinations of n of the digits 1..9." \
+def number_combinations(n, lo = 1, hi = 9) :
+    "generator which yields all possible combinations of n of the digits lo..hi." \
     " Correctly skips duplicate permutations of duplicate elements."
 
     def do_combine(remaining, used) :
-        for i in range(max(used + (1,)), 10) :
+        for i in range(max(used + (lo,)), hi + 1) :
             if remaining > 1 :
                 for rest in do_combine(remaining - 1, used + (i,)) :
                     yield rest
@@ -69,9 +69,28 @@ def digit_combinations(n) :
         #end for
     #end do_combine
 
-#begin digit_combinations
+#begin number_combinations
     return do_combine(n, ())
-#end digit_combinations
+#end number_combinations
+
+def parse_range_arg(arg, lo_default = None, hi_default = None) :
+    sep = ".."
+    seppos = arg.find(sep)
+    assert seppos >= 0, "missing separator in range arg"
+    lo = arg[:seppos]
+    hi = arg[seppos + len(sep):]
+    if len(lo) != 0 :
+        lo = int(lo)
+    else :
+        lo = lo_default
+    #end if
+    if len(hi) != 0 :
+        hi = int(hi)
+    else :
+        hi = hi_default
+    #end if
+    return lo, hi
+#end parse_range_arg
 
 #+
 # Expression representation and evaluation
@@ -375,12 +394,24 @@ def cmd_solve(args, opts) :
 
     #end AnswerCollector
 
+#begin cmd_solve
     solve(numbers, target, AnswerCollector.another_answer)
     AnswerCollector.no_more_answers()
 #end cmd_solve
 
 def cmd_combinations(args, opts) :
     n, target = tuple(int(n) for n in args)
+    arg = opts.get("range")
+    lo, hi = 1, 9
+    if arg != None :
+        lo, hi = parse_range_arg(arg, lo, hi)
+    #end if
+    min_solutions = 0
+    max_solutions = infinity
+    arg = opts.get("solutions")
+    if arg != None :
+        min_solutions, max_solutions = parse_range_arg(arg, min_solutions, max_solutions)
+    #end if
 
     class AnswerCounter :
 
@@ -395,10 +426,12 @@ def cmd_combinations(args, opts) :
     #end AnswerCounter
 
 #begin cmd_combinations
-    for c in digit_combinations(n) :
+    for c in number_combinations(n, lo, hi) :
         counter = AnswerCounter()
         solve(c, target, counter.another_answer)
-        sys.stdout.write("%s => %d\n" % (repr(c), counter.nr_answers))
+        if counter.nr_answers >= min_solutions and counter.nr_answers <= max_solutions :
+            sys.stdout.write("%s => %d\n" % (repr(c), counter.nr_answers))
+        #end if
     #end for
 #end cmd_combinations
 
@@ -435,12 +468,13 @@ recognized_commands = \
     "combinations" :
       {
         "args" : 2,
-        "opts" : (),
+        "opts" : ("range=", "solutions="),
         "action" : cmd_combinations,
-        "help_usage" : "nrnums target",
+        "help_usage" : "[--range=lo..hi] [--solutions=min..max] nrnums target",
         "help_descr" :
-            "tries to find expressions containing the specified number of numbers"
-            " from [1 .. 9] evaluating to the specified target",
+            "returns counts of expressions containing the specified number of numbers"
+            " from the specified range (default 1..9) evaluating to the specified target."
+            " Only reports a count of solutions if it is within [min, max] (default 0..∞)",
       },
 
   } # recognized_commands
