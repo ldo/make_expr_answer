@@ -477,6 +477,36 @@ def cmd_totals(args, opts) :
     #end for
 #end cmd_totals
 
+def cmd_satisfies_all(args, opts) :
+    nrnums = int(args[0])
+    min_total, max_total = parse_range_arg(opts["totals"])
+    assert min_total != None and max_total != None, "need to explicitly specify --totals range"
+    lo, hi = 1, 9
+    arg = opts.get("range")
+    if arg != None :
+        lo, hi = parse_range_arg(arg, lo, hi)
+    #end if
+    for c in number_combinations(nrnums, lo, hi) :
+        total_try = iter(range(min_total, max_total + 1))
+        while True :
+            target = next(total_try, None)
+            if target == None :
+                satisfies = True
+                break
+            #end if
+            counter = AnswerCounter()
+            solve(c, target, counter.another_answer)
+            if counter.nr_answers == 0 :
+                satisfies = False
+                break
+            #end if
+        #end while
+        if satisfies :
+            sys.stdout.write("%s\n" % repr(c))
+        #end if
+    #end for
+#end cmd_satisfies_all
+
 recognized_commands = \
   {
 # key is command name, value is dictionary with following fields:
@@ -529,6 +559,19 @@ recognized_commands = \
             "returns counts of expressions made up of the specified numbers that"
             " evaluate to each possible total in the specified range."
             " Only reports a count of solutions if it is within [smin, smax] (default 0..∞)",
+      },
+
+    "satisfies_all" :
+      {
+        "args" : (1),
+        "opts" : ("range=", "totals="),
+        "required" : ("totals",),
+        "action" : cmd_satisfies_all,
+        "help_usage" : "[--range=lo..hi] --totals=tmin..tmax nrnums",
+        "help_descr" :
+            "tries to find combinations of the specified number of numbers that"
+            " from the specified range (default 1..9) that can form expressions"
+            " evaluating to every total in the range tmin..tmax",
       },
 
   } # recognized_commands
