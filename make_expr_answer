@@ -455,11 +455,11 @@ def cmd_combinations(args, opts) :
 
 def cmd_totals(args, opts) :
     numbers = tuple(int(n) for n in args)
-    lo = 1
-    hi = largest_total(numbers)
-    arg = opts.get("range")
+    min_total = 1
+    max_total = largest_total(numbers)
+    arg = opts.get("totals")
     if arg != None :
-        lo, hi = parse_range_arg(arg, lo, hi)
+        min_total, max_total = parse_range_arg(arg, min_total, max_total)
     #end if
     min_solutions = 0
     max_solutions = infinity
@@ -468,7 +468,7 @@ def cmd_totals(args, opts) :
         min_solutions, max_solutions = parse_range_arg(arg, min_solutions, max_solutions)
     #end if
 
-    for target in range(lo, hi + 1) :
+    for target in range(min_total, max_total + 1) :
         counter = AnswerCounter()
         solve(numbers, target, counter.another_answer)
         if counter.nr_answers >= min_solutions and counter.nr_answers <= max_solutions :
