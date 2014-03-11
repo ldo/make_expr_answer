@@ -507,6 +507,7 @@ def cmd_coverage(args, opts) :
                 else :
                     sys.stdout.write("%d" % this_achieved)
                 #end if
+                sys.stdout.flush()
             #end if
             prev_achieved = None
             this_achieved = None
