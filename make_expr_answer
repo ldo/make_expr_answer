@@ -467,7 +467,6 @@ def cmd_counts(args, opts) :
     if arg != None :
         min_solutions, max_solutions = parse_range_arg(arg, min_solutions, max_solutions)
     #end if
-
     for target in range(min_total, max_total + 1) :
         counter = AnswerCounter()
         solve(numbers, target, counter.another_answer)
@@ -476,6 +475,46 @@ def cmd_counts(args, opts) :
         #end if
     #end for
 #end cmd_counts
+
+def cmd_coverage(args, opts) :
+    numbers = tuple(int(n) for n in args)
+    targets = iter(range(1, largest_total(numbers) + 1))
+    prev_achieved = None
+    this_achieved = None
+    found_something = False
+    while True :
+        target = next(targets, None)
+        if target != None :
+            counter = AnswerCounter()
+            solve(numbers, target, counter.another_answer)
+            solvable = counter.nr_answers != 0
+        else :
+            solvable = False
+        #end if
+        if solvable :
+            if prev_achieved == None :
+                prev_achieved = target
+                if found_something :
+                    sys.stdout.write(", ")
+                #end if
+            #end if
+            this_achieved = target
+            found_something = True
+        else :
+            if this_achieved != None :
+                sys.stdout.write("%d..%d" % (prev_achieved, this_achieved))
+            #end if
+            prev_achieved = None
+            this_achieved = None
+        #end if
+        if target == None :
+            break
+    #end while
+    if not found_something :
+        sys.stdout.write("None")
+    #end if
+    sys.stdout.write("\n")
+#end cmd_coverage
 
 def cmd_satisfies_all(args, opts) :
     nrnums = int(args[0])
@@ -559,6 +598,16 @@ recognized_commands = \
             "returns counts of expressions made up of the specified numbers that"
             " evaluate to each possible total in the specified range."
             " Only reports a count of solutions if it is within [smin, smax] (default 0..∞)",
+      },
+
+    "coverage" :
+      {
+        "args" : (2, infinity),
+        "opts" : (),
+        "action" : cmd_coverage,
+        "help_usage" : "num1 num2...",
+        "help_descr" :
+            "reports all totals achievable with expressions formed from the specified numbers",
       },
 
     "satisfies_all" :
