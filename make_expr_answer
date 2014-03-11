@@ -453,7 +453,7 @@ def cmd_combinations(args, opts) :
     #end for
 #end cmd_combinations
 
-def cmd_totals(args, opts) :
+def cmd_counts(args, opts) :
     numbers = tuple(int(n) for n in args)
     min_total = 1
     max_total = largest_total(numbers)
@@ -475,7 +475,7 @@ def cmd_totals(args, opts) :
             sys.stdout.write("%d => %d\n" % (target, counter.nr_answers))
         #end if
     #end for
-#end cmd_totals
+#end cmd_counts
 
 def cmd_satisfies_all(args, opts) :
     nrnums = int(args[0])
@@ -549,11 +549,11 @@ recognized_commands = \
             " Only reports a count of solutions if it is within [min, max] (default 0..∞)",
       },
 
-    "totals" :
+    "counts" :
       {
         "args" : (2, infinity),
         "opts" : ("solutions=", "totals="),
-        "action" : cmd_totals,
+        "action" : cmd_counts,
         "help_usage" : "[--solutions=smin..smax] [--totals=tmin..tmax] num1 num2...",
         "help_descr" :
             "returns counts of expressions made up of the specified numbers that"
