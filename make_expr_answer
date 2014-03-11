@@ -502,7 +502,11 @@ def cmd_coverage(args, opts) :
             found_something = True
         else :
             if this_achieved != None :
-                sys.stdout.write("%d..%d" % (prev_achieved, this_achieved))
+                if this_achieved > prev_achieved :
+                    sys.stdout.write("%d..%d" % (prev_achieved, this_achieved))
+                else :
+                    sys.stdout.write("%d" % this_achieved)
+                #end if
             #end if
             prev_achieved = None
             this_achieved = None
