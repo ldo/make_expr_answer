@@ -569,8 +569,8 @@ recognized_commands = \
         "action" : cmd_satisfies_all,
         "help_usage" : "[--range=lo..hi] --totals=tmin..tmax nrnums",
         "help_descr" :
-            "tries to find combinations of the specified number of numbers that"
-            " from the specified range (default 1..9) that can form expressions"
+            "tries to find combinations of the specified number of numbers from"
+            " the specified range (default 1..9) that can form expressions"
             " evaluating to every total in the range tmin..tmax",
       },
 
