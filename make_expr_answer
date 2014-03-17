@@ -479,6 +479,7 @@ def cmd_counts(args, opts) :
 def cmd_coverage(args, opts) :
     numbers = tuple(int(n) for n in args)
     targets = iter(range(1, largest_total(numbers) + 1))
+    contiguous = "contiguous" in opts
     prev_achieved = None
     this_achieved = None
     found_something = False
@@ -506,6 +507,10 @@ def cmd_coverage(args, opts) :
                     sys.stdout.write("%d..%d" % (prev_achieved, this_achieved))
                 else :
                     sys.stdout.write("%d" % this_achieved)
+                #end if
+                if contiguous :
+                    target = None # terminate outer loop as well
+                    break
                 #end if
                 sys.stdout.flush()
             #end if
@@ -608,11 +613,13 @@ recognized_commands = \
     "coverage" :
       {
         "args" : (2, infinity),
-        "opts" : (),
+        "opts" : ("contiguous",),
         "action" : cmd_coverage,
-        "help_usage" : "num1 num2...",
+        "help_usage" : "[--contiguous] num1 num2...",
         "help_descr" :
-            "reports all totals achievable with expressions formed from the specified numbers",
+            "reports totals achievable with expressions formed from the specified numbers."
+            " if --contiguous is specified, then it stops with the first contiguous run,"
+            " otherwise it tries to find all totals.",
       },
 
     "satisfies_all" :
